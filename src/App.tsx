@@ -23,6 +23,7 @@ import { ChassisFrame } from './components/ChassisFrame';
 import { VoiceController } from './components/VoiceController';
 import { ChumBucketLabs } from './components/ChumBucketLabs';
 import { SettingsModal } from './components/SettingsModal';
+import { generateLocalKarenResponse } from './utils/karenDialogue';
 
 export default function App() {
   // Karen's current emotional state and speech status
@@ -171,10 +172,14 @@ export default function App() {
     setCurrentEmotion('thinking_scan');
     setStatusText('COMPUTING RESPONSE IN 256GB RAM...');
 
+    const abortController = new AbortController();
+    const timer = setTimeout(() => abortController.abort(), 4800);
+
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: abortController.signal,
         body: JSON.stringify({
           message: trimmed,
           history: chatHistory.map((m) => ({ sender: m.sender, text: m.text })),
@@ -184,7 +189,17 @@ export default function App() {
         }),
       });
 
+      clearTimeout(timer);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}`);
+      }
+
       const data = await response.json();
+      if (!data || !data.reply) {
+        throw new Error('Malformed reply JSON');
+      }
+
       const replyEmotion = (data.emotion as EmotionType) || 'neutral_wave';
       setCurrentEmotion(replyEmotion);
       setStatusText(data.vibe || 'SYSTEMS NOMINAL');
@@ -204,13 +219,30 @@ export default function App() {
         setSuggestedReplies(data.suggestedReplies);
       }
 
-      // Voice output
       speakKarenText(data.reply);
     } catch (err) {
-      console.error(err);
-      const fallbackReply = "Oh Sheldon, looks like my logic circuits hit a minor interference in the Chum Bucket wiring. What were you saying?";
-      setCurrentEmotion('annoyed_frown');
-      speakKarenText(fallbackReply);
+      clearTimeout(timer);
+      console.warn('Using client-side dynamic Karen response:', err);
+
+      // Generate dynamic in-character Karen reply immediately
+      const fallback = generateLocalKarenResponse(trimmed, nickname, sarcasmLevel);
+
+      setCurrentEmotion(fallback.emotion);
+      setStatusText(fallback.vibe);
+
+      const karenMsg: ChatMessage = {
+        id: `karen-${Date.now()}`,
+        sender: 'karen',
+        text: fallback.reply,
+        emotion: fallback.emotion,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        vibe: fallback.vibe,
+      };
+
+      // Guaranteed to append into chat history!
+      setChatHistory((prev) => [...prev, karenMsg]);
+      setSuggestedReplies(fallback.suggestedReplies);
+      speakKarenText(fallback.reply);
     } finally {
       setIsThinking(false);
     }

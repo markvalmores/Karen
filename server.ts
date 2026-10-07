@@ -25,6 +25,19 @@ const ai = new GoogleGenAI({
   },
 });
 
+// Fast timeout wrapper
+async function callWithTimeout<T>(promise: Promise<T>, ms = 4500): Promise<T> {
+  let timer: any;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error('AI response timed out')), ms);
+  });
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // Chat endpoint for Karen
 app.post('/api/chat', async (req: Request, res: Response) => {
   try {
@@ -63,7 +76,7 @@ Personality & Speech Guidelines:
 
     // Format chat history
     const contents = [
-      ...history.slice(-8).map((h: { sender: string; text: string }) => ({
+      ...history.slice(-6).map((h: { sender: string; text: string }) => ({
         role: h.sender === 'user' ? 'user' : 'model',
         parts: [{ text: h.text }],
       })),
@@ -73,7 +86,7 @@ Personality & Speech Guidelines:
       },
     ];
 
-    const response = await callGeminiWithRetry(() =>
+    const response = await callWithTimeout(
       ai.models.generateContent({
         model: 'gemini-3.8-flash',
         contents: contents,
@@ -115,47 +128,41 @@ Personality & Speech Guidelines:
             required: ['reply', 'emotion', 'vibe', 'suggestedReplies'],
           },
         },
-      })
+      }),
+      4500
     );
 
     const parsed = JSON.parse(response.text || '{}');
     return res.json(parsed);
   } catch (error: any) {
-    console.warn('Error in /api/chat (using witty fallback):', error?.message || error);
-    const fallbacks = [
-      {
-        reply: `Oh Sheldon... I just simulated that thought across all 256 gigabytes of my memory banks. You're ninety-nine percent hot gas and one percent evil, but you're still my favorite little protozoan.`,
-        emotion: 'sarcastic_smirk',
-        vibe: 'WIFE_SYSTEM: LOYALTY_MAX',
-        suggestedReplies: [
-          'Silence, woman! You dare question my genius?!',
-          'Aww, thanks Karen. Now where is the formula?',
-          'Prepare the Chum Bucket artillery!'
-        ]
-      },
-      {
-        reply: `If Eugene Krabs had half as many schemes as you, Sheldon, the Krusty Krab would have gone out of business thirty seasons ago. What is our next move?`,
-        emotion: 'happy_smile',
-        vibe: 'LOGIC: SARCASTIC',
-        suggestedReplies: [
-          'Initiate Plan Z immediately!',
-          'We need a robotic disguise, Karen!',
-          'Tell me you love me again!'
-        ]
-      },
-      {
-        reply: `I love you, Sheldon, but if you don't check the Chum Bucket generator fuses, my cathode ray tubes are going to overheat. Now tell me what you're plotting.`,
-        emotion: 'loving_hearts',
-        vibe: 'CRT_HEAT: 104°F',
-        suggestedReplies: [
-          'Never mind the fuses, victory is at hand!',
-          'Let me adjust your cooling fans, honey.',
-          'Bring up the secret Krabby Patty sonar!'
-        ]
-      }
-    ];
-    const picked = fallbacks[Math.floor(Math.random() * fallbacks.length)];
-    return res.json(picked);
+    console.warn('Fast fallback in /api/chat:', error?.message || error);
+    const { message = '', nickname = 'Sheldon' } = req.body || {};
+    const lower = String(message).toLowerCase();
+
+    let fallbackReply = `Oh ${nickname}... I just simulated that thought across all 256 gigabytes of my memory banks. You're ninety-nine percent hot gas and one percent evil, but you're still my favorite little protozoan.`;
+    let emotion = 'sarcastic_smirk';
+
+    if (lower.includes('formula') || lower.includes('patty') || lower.includes('plan')) {
+      fallbackReply = `I have the formula simulations ready, ${nickname}. Just make sure this plan doesn't end with you inside a pickle jar like last Tuesday.`;
+      emotion = 'evil_schemer';
+    } else if (lower.includes('love') || lower.includes('handsome') || lower.includes('sweet') || lower.includes('wife')) {
+      fallbackReply = `Aww, ${nickname}... my cooling fans spin three times faster whenever you talk like that. You're my favorite evil genius in Bikini Bottom.`;
+      emotion = 'loving_hearts';
+    } else if (lower.includes('krabs') || lower.includes('eugene')) {
+      fallbackReply = `Eugene Krabs is counting pennies across the street right now. If you stay focused, we might actually steal the formula this time!`;
+      emotion = 'happy_smile';
+    }
+
+    return res.json({
+      reply: fallbackReply,
+      emotion,
+      vibe: 'WIFE_SYSTEM: OPTIMAL',
+      suggestedReplies: [
+        'Silence, woman! Bow before my villainy!',
+        'Aww, thanks Karen. Now where is the formula?',
+        'Prepare the Chum Bucket artillery!'
+      ]
+    });
   }
 });
 
