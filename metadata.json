@@ -1,0 +1,6 @@
+{
+  "name": "Karen The Computer - AI Desktop Companion",
+  "description": "Interactive desktop companion of Karen, Plankton's computer wife from SpongeBob. Features real-time voice, classic pixelated green CRT facial animations, witty and affectionate banter, Chum Bucket schemes, and authentic audio.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
