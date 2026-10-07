@@ -30,38 +30,51 @@ STRICT RESPONSE RULES:
 - Directly answer questions, critique specific schemes, or react to the exact topic raised.
 - Keep it concise, expressive, and witty (2-3 sentences). Return JSON.`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
-        contents: [
-          ...history.slice(-6).map((h: any) => ({
-            role: h.sender === 'user' ? 'user' : 'model',
-            parts: [{ text: h.text }],
-          })),
-          { role: 'user', parts: [{ text: message }] },
-        ],
-        config: {
-          thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
-          systemInstruction,
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              reply: { type: Type.STRING },
-              emotion: {
-                type: Type.STRING,
-                enum: ['neutral_wave', 'happy_smile', 'loving_hearts', 'sarcastic_smirk', 'evil_schemer', 'thinking_scan', 'annoyed_frown', 'laughing'],
-              },
-              vibe: { type: Type.STRING },
-              suggestedReplies: { type: Type.ARRAY, items: { type: Type.STRING } },
-            },
-            required: ['reply', 'emotion', 'vibe', 'suggestedReplies'],
-          },
-        },
-      });
+      let parsedData = null;
+      const modelsToTry = ['gemini-3.1-flash-lite', 'gemini-3.8-flash'];
 
-      const data = JSON.parse(response.text || '{}');
-      if (data && data.reply) {
-        return res.status(200).json(data);
+      for (const model of modelsToTry) {
+        try {
+          const response = await ai.models.generateContent({
+            model,
+            contents: [
+              ...history.slice(-6).map((h: any) => ({
+                role: h.sender === 'user' ? 'user' : 'model',
+                parts: [{ text: h.text }],
+              })),
+              { role: 'user', parts: [{ text: message }] },
+            ],
+            config: {
+              systemInstruction,
+              responseMimeType: 'application/json',
+              responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                  reply: { type: Type.STRING },
+                  emotion: {
+                    type: Type.STRING,
+                    enum: ['neutral_wave', 'happy_smile', 'loving_hearts', 'sarcastic_smirk', 'evil_schemer', 'thinking_scan', 'annoyed_frown', 'laughing'],
+                  },
+                  vibe: { type: Type.STRING },
+                  suggestedReplies: { type: Type.ARRAY, items: { type: Type.STRING } },
+                },
+                required: ['reply', 'emotion', 'vibe', 'suggestedReplies'],
+              },
+            },
+          });
+
+          const data = JSON.parse(response.text || '{}');
+          if (data && data.reply) {
+            parsedData = data;
+            break;
+          }
+        } catch (e) {
+          console.warn(`Model ${model} error:`, e);
+        }
+      }
+
+      if (parsedData) {
+        return res.status(200).json(parsedData);
       }
     } catch (e) {
       console.warn('Vercel API call fallback:', e);

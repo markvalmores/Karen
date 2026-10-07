@@ -85,54 +85,68 @@ STRICT RESPONSE RULES:
       },
     ];
 
-    const response = await callWithTimeout(
-      ai.models.generateContent({
-        model: 'gemini-3.8-flash',
-        contents: contents,
-        config: {
-          thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
-          systemInstruction,
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              reply: {
-                type: Type.STRING,
-                description: "Karen's response to Plankton addressing his exact words and context.",
-              },
-              emotion: {
-                type: Type.STRING,
-                enum: [
-                  'neutral_wave',
-                  'happy_smile',
-                  'loving_hearts',
-                  'sarcastic_smirk',
-                  'evil_schemer',
-                  'thinking_scan',
-                  'annoyed_frown',
-                  'laughing',
-                ],
-                description: "The primary facial expression for Karen's CRT monitor.",
-              },
-              vibe: {
-                type: Type.STRING,
-                description: "Short 2-4 word retro computer status readout.",
-              },
-              suggestedReplies: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING },
-                description: "3 short, punchy Plankton responses matching this topic.",
-              },
-            },
-            required: ['reply', 'emotion', 'vibe', 'suggestedReplies'],
-          },
-        },
-      }),
-      25000
-    );
+    let parsedResult = null;
+    const modelsToTry = ['gemini-3.1-flash-lite', 'gemini-3.8-flash'];
 
-    const parsed = JSON.parse(response.text || '{}');
-    return res.json(parsed);
+    for (const model of modelsToTry) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents: contents,
+          config: {
+            systemInstruction,
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                reply: {
+                  type: Type.STRING,
+                  description: "Karen's response to Plankton addressing his exact words and context.",
+                },
+                emotion: {
+                  type: Type.STRING,
+                  enum: [
+                    'neutral_wave',
+                    'happy_smile',
+                    'loving_hearts',
+                    'sarcastic_smirk',
+                    'evil_schemer',
+                    'thinking_scan',
+                    'annoyed_frown',
+                    'laughing',
+                  ],
+                  description: "The primary facial expression for Karen's CRT monitor.",
+                },
+                vibe: {
+                  type: Type.STRING,
+                  description: "Short 2-4 word retro computer status readout.",
+                },
+                suggestedReplies: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING },
+                  description: "3 short, punchy Plankton responses matching this topic.",
+                },
+              },
+              required: ['reply', 'emotion', 'vibe', 'suggestedReplies'],
+            },
+          },
+        });
+
+        const parsed = JSON.parse(response.text || '{}');
+        if (parsed && parsed.reply) {
+          parsedResult = parsed;
+          break;
+        }
+      } catch (err: any) {
+        console.warn(`Model ${model} error:`, err?.message || err);
+      }
+    }
+
+    if (parsedResult) {
+      return res.json(parsedResult);
+    }
+
+    throw new Error('All AI models unavailable');
   } catch (error: any) {
     console.warn('API error in /api/chat (using dynamic contextual generator):', error?.message || error);
     const { message = '', nickname = 'Sheldon', sarcasmLevel = 50 } = req.body || {};
