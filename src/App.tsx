@@ -38,6 +38,12 @@ export default function App() {
   const [sarcasmLevel, setSarcasmLevel] = useState<number>(50);
   const [showScanlines, setShowScanlines] = useState<boolean>(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+  const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem('karen_user_api_key') || '');
+
+  const handleUpdateApiKey = (key: string) => {
+    setApiKey(key);
+    localStorage.setItem('karen_user_api_key', key);
+  };
 
   // Conversation state
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>(() => {
@@ -186,6 +192,7 @@ export default function App() {
           nickname,
           sarcasmLevel,
           chassisMode: chassis,
+          userApiKey: apiKey,
         }),
       });
 
@@ -539,6 +546,8 @@ export default function App() {
         onUpdateSarcasmLevel={setSarcasmLevel}
         showScanlines={showScanlines}
         onToggleScanlines={setShowScanlines}
+        apiKey={apiKey}
+        onUpdateApiKey={handleUpdateApiKey}
         onClearHistory={() => {
           setChatHistory([
             {

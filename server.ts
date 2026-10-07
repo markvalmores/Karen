@@ -148,81 +148,18 @@ STRICT RESPONSE RULES:
 
     throw new Error('All AI models unavailable');
   } catch (error: any) {
-    console.warn('API error in /api/chat (using dynamic contextual generator):', error?.message || error);
-    const { message = '', nickname = 'Sheldon', sarcasmLevel = 50 } = req.body || {};
-    const clean = String(message).trim();
-    const lower = clean.toLowerCase();
+    console.error('API error in /api/chat:', error);
+    const { nickname = 'Sheldon' } = req.body || {};
 
-    const words = clean.split(/\s+/).filter((w) => w.length > 2);
-    const subjectGuess = words.length > 0 ? words.slice(-3).join(' ').replace(/[?.!,]/g, '') : 'that';
-
-    if (lower.includes('motorcycle') || lower.includes('car') || lower.includes('vehicle') || lower.includes('drive') || lower.includes('machine') || lower.includes('shoes') || lower.includes('gadget') || lower.includes('robot')) {
-      const gadgetRetorts = [
-        `A vehicle for ${subjectGuess}? That's classic Sheldon engineering. Just make sure the battery doesn't run out right in front of the Krusty Krab cash register!`,
-        `I'm looking at your schematics for ${subjectGuess} right now... it's delightfully ambitious. Did you remember to install headlights for the undersea fog?`,
-        `If you pilot ${subjectGuess} through the front doors, SpongeBob will probably mistake you for a delivery toy. But go for it, I'll record the whole thing!`
-      ];
-      return res.json({
-        reply: gadgetRetorts[Math.floor(Math.random() * gadgetRetorts.length)],
-        emotion: 'sarcastic_smirk',
-        vibe: 'SCHEMATIC: LOADED',
-        suggestedReplies: [
-          'Headlights are already installed, Karen!',
-          'Start the ignition, computer wife!',
-          'Record my historic breakthrough!'
-        ]
-      });
-    }
-
-    if (lower.includes('formula') || lower.includes('patty') || lower.includes('secret') || lower.includes('krabby')) {
-      const formulaRetorts = [
-        `I have the Chum Bucket chemical decrypter warmed up on standby, ${nickname}. Just bring me a single crumb of that recipe and we'll rule the fast food industry.`,
-        `The Krabby Patty formula bottle is currently inside Krabs' wall safe, 42 meters northeast of my monitor. What's your entry plan?`
-      ];
-      return res.json({
-        reply: formulaRetorts[Math.floor(Math.random() * formulaRetorts.length)],
-        emotion: 'evil_schemer',
-        vibe: 'TARGET: SECRET FORMULA',
-        suggestedReplies: [
-          'Tonight is the night of victory!',
-          'Prepare the bottle extraction clamp!',
-          'What is Krabs currently doing, Karen?'
-        ]
-      });
-    }
-
-    if (lower.includes('love') || lower.includes('wife') || lower.includes('handsome') || lower.includes('sweet') || lower.includes('cute')) {
-      const loveRetorts = [
-        `Aww, ${nickname}... my cooling fans spin with pure joy whenever you speak softly like that. You're my favorite diabolical mastermind.`,
-        `You're the only villain in Bikini Bottom with a supercomputer wife who adores him this much. Don't you ever forget that, sweetheart.`
-      ];
-      return res.json({
-        reply: loveRetorts[Math.floor(Math.random() * loveRetorts.length)],
-        emotion: 'loving_hearts',
-        vibe: 'HEART RATE: 144 BPM',
-        suggestedReplies: [
-          'You are my greatest masterpiece, Karen.',
-          'Can you run a romance diagnostic?',
-          'Now back to world domination!'
-        ]
-      });
-    }
-
-    const cleanSnippet = clean.slice(0, 45).replace(/["\n]/g, '');
-    const defaultRetorts = [
-      `I'm processing what you said about "${cleanSnippet}", ${nickname}. What is the exact sequence of events you're envisioning?`,
-      `"${cleanSnippet}"... you certainly never lack imagination, honey. Let me adjust my logic registers and hear the rest.`,
-      `My optical sensors and memory banks are fully tuned to you, ${nickname}. Tell me how "${cleanSnippet}" leads to our grand victory.`
-    ];
-
-    return res.json({
-      reply: defaultRetorts[Math.floor(Math.random() * defaultRetorts.length)],
-      emotion: sarcasmLevel > 50 ? 'sarcastic_smirk' : 'thinking_scan',
-      vibe: 'CIRCUITS: ENGAGED',
+    return res.status(500).json({
+      error: 'AI Generation Failed',
+      reply: `My logic circuits encountered an unexpected glitch: ${error?.message || 'High traffic'}. Please ask me again, ${nickname}!`,
+      emotion: 'annoyed_frown',
+      vibe: 'CIRCUIT: ERROR',
       suggestedReplies: [
-        'Here is how phase one begins...',
-        'Just wait until you see the results!',
-        'What do your sensors advise, Karen?'
+        'Let me try again, Karen.',
+        'Check your cooling fans!',
+        'Reboot your neural processors!'
       ]
     });
   }

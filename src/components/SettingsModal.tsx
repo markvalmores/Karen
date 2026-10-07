@@ -15,6 +15,8 @@ interface SettingsModalProps {
   showScanlines: boolean;
   onToggleScanlines: (val: boolean) => void;
   onClearHistory: () => void;
+  apiKey?: string;
+  onUpdateApiKey?: (key: string) => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -29,6 +31,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   showScanlines,
   onToggleScanlines,
   onClearHistory,
+  apiKey = '',
+  onUpdateApiKey,
 }) => {
   if (!isOpen) return null;
 
@@ -166,6 +170,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               {showScanlines ? 'ON' : 'OFF'}
             </button>
           </div>
+
+          {/* Custom Gemini API Key (Optional for standalone Vercel deployment) */}
+          {onUpdateApiKey && (
+            <div className="pt-2 border-t border-slate-800">
+              <label className="flex items-center justify-between text-slate-300 font-semibold mb-1">
+                <span>Gemini API Key (Optional)</span>
+                <span className="text-[10px] text-slate-500">Auto-configured in Studio</span>
+              </label>
+              <input
+                type="password"
+                value={apiKey}
+                onChange={(e) => onUpdateApiKey(e.target.value)}
+                placeholder="AIzaSy... (Leave blank to use default)"
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-[11px] text-slate-200 focus:outline-none focus:border-emerald-500 font-mono"
+              />
+            </div>
+          )}
 
           {/* Clear Chat History */}
           <div className="pt-2 border-t border-slate-800">
