@@ -23,12 +23,24 @@ export default async function handler(req: any, res: any) {
 
     const response = await ai.models.generateContent({
       model: 'gemini-3.8-flash-lite-tts',
-      contents: [{ role: 'user', parts: [{ text }] }],
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              text,
+              speechMetadata: {
+                style: 'A sweet, cute, youthful young woman in her late teens, melodic, bright, charming, with a warm, affectionate, and lively tone',
+              },
+            },
+          ],
+        },
+      ],
       config: {
         responseModalities: ['AUDIO'],
         speechConfig: {
           voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Kore' },
+            prebuiltVoiceConfig: { voiceName: 'Zephyr' },
           },
         },
       },

@@ -261,7 +261,7 @@ class SoundEngine {
     }
   }
 
-  // Fallback to Web Speech Synthesis with robotic cadence
+  // Fallback to Web Speech Synthesis with cute youthful female voice
   public speakBrowserSpeech(text: string, onStart?: () => void, onEnd?: () => void) {
     if (this.isMuted || !('speechSynthesis' in window)) {
       if (onEnd) onEnd();
@@ -272,18 +272,51 @@ class SoundEngine {
 
     const utterance = new SpeechSynthesisUtterance(text);
     
-    // Choose feminine voice if available (Karen)
+    // Choose strictly sweet, cute, youthful female voice
     const voices = window.speechSynthesis.getVoices();
-    const preferredVoice = voices.find(
-      (v) => (v.name.includes('Samantha') || v.name.includes('Zira') || v.name.includes('Google US English') || v.name.includes('Victoria') || v.name.toLowerCase().includes('female')) && v.lang.startsWith('en')
-    ) || voices.find((v) => v.lang.startsWith('en'));
+    const femalePriorityNames = [
+      'Samantha',
+      'Ava',
+      'Allison',
+      'Victoria',
+      'Jenny',
+      'Aria',
+      'Karen',
+      'Zira',
+      'Google US English',
+      'Moira',
+      'Tessa',
+      'Siri',
+    ];
 
-    if (preferredVoice) {
-      utterance.voice = preferredVoice;
+    const isExplicitMale = (name: string) => {
+      const lower = name.toLowerCase();
+      return lower.includes('male') || lower.includes('david') || lower.includes('george') || lower.includes('guy') || lower.includes('mark') || lower.includes('daniel');
+    };
+
+    let chosenVoice = voices.find((v) => 
+      femalePriorityNames.some((n) => v.name.includes(n)) && v.lang.startsWith('en') && !isExplicitMale(v.name)
+    );
+
+    if (!chosenVoice) {
+      chosenVoice = voices.find((v) => 
+        (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('woman')) && 
+        v.lang.startsWith('en') && 
+        !isExplicitMale(v.name)
+      );
     }
 
-    utterance.pitch = 1.25; // Slightly higher electronic pitch for Karen
-    utterance.rate = 1.05; // Quick, smart cadence
+    if (!chosenVoice) {
+      chosenVoice = voices.find((v) => v.lang.startsWith('en') && !isExplicitMale(v.name)) || voices[0];
+    }
+
+    if (chosenVoice) {
+      utterance.voice = chosenVoice;
+    }
+
+    // Youthful, cute, bright pitch and lively natural tempo
+    utterance.pitch = 1.34;
+    utterance.rate = 1.02;
 
     utterance.onstart = () => {
       if (onStart) onStart();

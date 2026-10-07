@@ -187,7 +187,7 @@ app.post('/api/tts', async (req: Request, res: Response) => {
             {
               text: text,
               speechMetadata: {
-                style: 'Crisp, slightly dry electronic computer tone with affectionate cadence and clear articulation',
+                style: 'A sweet, cute, youthful young woman in her late teens, melodic, bright, charming, with a warm, affectionate, and lively tone',
               },
             },
           ],
@@ -197,7 +197,7 @@ app.post('/api/tts', async (req: Request, res: Response) => {
         responseModalities: ['AUDIO'],
         speechConfig: {
           voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Kore' },
+            prebuiltVoiceConfig: { voiceName: 'Zephyr' },
           },
         },
       },
