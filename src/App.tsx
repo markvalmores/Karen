@@ -173,7 +173,7 @@ export default function App() {
     setStatusText('COMPUTING RESPONSE IN 256GB RAM...');
 
     const abortController = new AbortController();
-    const timer = setTimeout(() => abortController.abort(), 4800);
+    const timer = setTimeout(() => abortController.abort(), 20000);
 
     try {
       const response = await fetch('/api/chat', {

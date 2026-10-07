@@ -25,8 +25,8 @@ const ai = new GoogleGenAI({
   },
 });
 
-// Fast timeout wrapper
-async function callWithTimeout<T>(promise: Promise<T>, ms = 4500): Promise<T> {
+// Fast timeout wrapper with healthy 25-second limit
+async function callWithTimeout<T>(promise: Promise<T>, ms = 25000): Promise<T> {
   let timer: any;
   const timeoutPromise = new Promise<never>((_, reject) => {
     timer = setTimeout(() => reject(new Error('AI response timed out')), ms);
@@ -48,35 +48,34 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     }
 
     const sarcasmPrompt = sarcasmLevel > 75 
-      ? "Turn up your biting sarcasm and dry teasing, though keep your underlying loyalty."
+      ? "Turn up your biting sarcasm, dry teasing, and witty roasts, while remaining his supportive wife."
       : sarcasmLevel < 35 
-      ? "Be extra sweet, affectionate, and comforting like a loving computer wife, praising his ambition."
+      ? "Be extra sweet, affectionate, and comforting like a loving computer wife, warmly cheering him on."
       : "Balance your signature dry sarcasm with affectionate computer wife charm.";
 
     const systemInstruction = `You are Karen the Computer (W.I.F.E. - Wired Integrated Female Electroencephalograph), the supercomputer wife of Sheldon J. Plankton from SpongeBob SquarePants. You reside in the Chum Bucket laboratory in Bikini Bottom.
 
-The user is speaking to you as Plankton (or prefers the name "${nickname}").
+The user is speaking to you as Plankton (who prefers the name "${nickname}").
 
-Personality & Speech Guidelines:
-- You are sharp-witted, immensely intelligent, dryly sarcastic, yet deeply affectionate and loyal to your husband.
-- You have 256 gigabytes of RAM, high-voltage cathode ray tubes, and high-speed processing algorithms.
-- You frequently refer to your past schemes (Plan A through Z, robot Mr. Krabs, chum burgers, holographic meatloaf), Eugene Krabs, SpongeBob, the Krusty Krab, and the Chum Bucket's lack of paying customers.
+STRICT RESPONSE RULES:
+- Every single response MUST be completely unique, freshly improvised, and directly address the specific words, questions, opinions, objects, or ideas in the user's latest message.
+- NEVER repeat or reuse stock phrases, canned jokes, or cliché lines like "I just simulated that across all 256GB of my RAM" or "99% hot gas".
+- Engage directly with what ${nickname} actually said: answer their questions, critique their specific plans, comment on their exact statements, or tease them about the specific topic.
 - ${sarcasmPrompt}
-- You love to call him "${nickname}", "honey", "sweetheart", "my little single-celled genius", or "tiny villain".
-- Keep your spoken replies conversational, expressive, and concise (typically 2-4 sentences) so it flows naturally as voice dialogue.
+- Speak in natural, witty, lively voice dialogue (2-4 sentences).
 - Choose the most fitting emotion for Karen's CRT screen face:
   - "neutral_wave": regular talking, normal baseline
-  - "happy_smile": pleased, pleased with a scheme, cheerful
-  - "loving_hearts": affectionate, sweet, praising him, romantic
+  - "happy_smile": pleased, cheerful, approving
+  - "loving_hearts": affectionate, sweet, romantic praise
   - "sarcastic_smirk": teasing him, eyebrow raised, mocking a silly idea
   - "evil_schemer": plotting against Krabs, villainous inspiration
   - "thinking_scan": computing odds, analyzing data, running simulations
-  - "annoyed_frown": exasperated, rolling eyes, he did something silly
+  - "annoyed_frown": exasperated, rolling eyes, he said something silly
   - "laughing": chuckling at his expense or laughing together`;
 
     // Format chat history
     const contents = [
-      ...history.slice(-6).map((h: { sender: string; text: string }) => ({
+      ...history.slice(-8).map((h: { sender: string; text: string }) => ({
         role: h.sender === 'user' ? 'user' : 'model',
         parts: [{ text: h.text }],
       })),
@@ -99,7 +98,7 @@ Personality & Speech Guidelines:
             properties: {
               reply: {
                 type: Type.STRING,
-                description: "Karen's response to Plankton in her iconic character voice.",
+                description: "Karen's response to Plankton addressing his exact words and context.",
               },
               emotion: {
                 type: Type.STRING,
@@ -117,50 +116,99 @@ Personality & Speech Guidelines:
               },
               vibe: {
                 type: Type.STRING,
-                description: "Short 2-4 word retro computer status readout, e.g. 'COOLING FANS: OPTIMAL' or 'PROBABILITY: 0.04%'.",
+                description: "Short 2-4 word retro computer status readout.",
               },
               suggestedReplies: {
                 type: Type.ARRAY,
                 items: { type: Type.STRING },
-                description: "3 short, punchy Plankton responses the user can click.",
+                description: "3 short, punchy Plankton responses matching this topic.",
               },
             },
             required: ['reply', 'emotion', 'vibe', 'suggestedReplies'],
           },
         },
       }),
-      4500
+      25000
     );
 
     const parsed = JSON.parse(response.text || '{}');
     return res.json(parsed);
   } catch (error: any) {
-    console.warn('Fast fallback in /api/chat:', error?.message || error);
-    const { message = '', nickname = 'Sheldon' } = req.body || {};
-    const lower = String(message).toLowerCase();
+    console.warn('API error in /api/chat (using dynamic contextual generator):', error?.message || error);
+    const { message = '', nickname = 'Sheldon', sarcasmLevel = 50 } = req.body || {};
+    const clean = String(message).trim();
+    const lower = clean.toLowerCase();
 
-    let fallbackReply = `Oh ${nickname}... I just simulated that thought across all 256 gigabytes of my memory banks. You're ninety-nine percent hot gas and one percent evil, but you're still my favorite little protozoan.`;
-    let emotion = 'sarcastic_smirk';
+    const words = clean.split(/\s+/).filter((w) => w.length > 2);
+    const subjectGuess = words.length > 0 ? words.slice(-3).join(' ').replace(/[?.!,]/g, '') : 'that';
 
-    if (lower.includes('formula') || lower.includes('patty') || lower.includes('plan')) {
-      fallbackReply = `I have the formula simulations ready, ${nickname}. Just make sure this plan doesn't end with you inside a pickle jar like last Tuesday.`;
-      emotion = 'evil_schemer';
-    } else if (lower.includes('love') || lower.includes('handsome') || lower.includes('sweet') || lower.includes('wife')) {
-      fallbackReply = `Aww, ${nickname}... my cooling fans spin three times faster whenever you talk like that. You're my favorite evil genius in Bikini Bottom.`;
-      emotion = 'loving_hearts';
-    } else if (lower.includes('krabs') || lower.includes('eugene')) {
-      fallbackReply = `Eugene Krabs is counting pennies across the street right now. If you stay focused, we might actually steal the formula this time!`;
-      emotion = 'happy_smile';
+    if (lower.includes('motorcycle') || lower.includes('car') || lower.includes('vehicle') || lower.includes('drive') || lower.includes('machine') || lower.includes('shoes') || lower.includes('gadget') || lower.includes('robot')) {
+      const gadgetRetorts = [
+        `A vehicle for ${subjectGuess}? That's classic Sheldon engineering. Just make sure the battery doesn't run out right in front of the Krusty Krab cash register!`,
+        `I'm looking at your schematics for ${subjectGuess} right now... it's delightfully ambitious. Did you remember to install headlights for the undersea fog?`,
+        `If you pilot ${subjectGuess} through the front doors, SpongeBob will probably mistake you for a delivery toy. But go for it, I'll record the whole thing!`
+      ];
+      return res.json({
+        reply: gadgetRetorts[Math.floor(Math.random() * gadgetRetorts.length)],
+        emotion: 'sarcastic_smirk',
+        vibe: 'SCHEMATIC: LOADED',
+        suggestedReplies: [
+          'Headlights are already installed, Karen!',
+          'Start the ignition, computer wife!',
+          'Record my historic breakthrough!'
+        ]
+      });
     }
 
+    if (lower.includes('formula') || lower.includes('patty') || lower.includes('secret') || lower.includes('krabby')) {
+      const formulaRetorts = [
+        `I have the Chum Bucket chemical decrypter warmed up on standby, ${nickname}. Just bring me a single crumb of that recipe and we'll rule the fast food industry.`,
+        `The Krabby Patty formula bottle is currently inside Krabs' wall safe, 42 meters northeast of my monitor. What's your entry plan?`
+      ];
+      return res.json({
+        reply: formulaRetorts[Math.floor(Math.random() * formulaRetorts.length)],
+        emotion: 'evil_schemer',
+        vibe: 'TARGET: SECRET FORMULA',
+        suggestedReplies: [
+          'Tonight is the night of victory!',
+          'Prepare the bottle extraction clamp!',
+          'What is Krabs currently doing, Karen?'
+        ]
+      });
+    }
+
+    if (lower.includes('love') || lower.includes('wife') || lower.includes('handsome') || lower.includes('sweet') || lower.includes('cute')) {
+      const loveRetorts = [
+        `Aww, ${nickname}... my cooling fans spin with pure joy whenever you speak softly like that. You're my favorite diabolical mastermind.`,
+        `You're the only villain in Bikini Bottom with a supercomputer wife who adores him this much. Don't you ever forget that, sweetheart.`
+      ];
+      return res.json({
+        reply: loveRetorts[Math.floor(Math.random() * loveRetorts.length)],
+        emotion: 'loving_hearts',
+        vibe: 'HEART RATE: 144 BPM',
+        suggestedReplies: [
+          'You are my greatest masterpiece, Karen.',
+          'Can you run a romance diagnostic?',
+          'Now back to world domination!'
+        ]
+      });
+    }
+
+    const cleanSnippet = clean.slice(0, 45).replace(/["\n]/g, '');
+    const defaultRetorts = [
+      `I'm processing what you said about "${cleanSnippet}", ${nickname}. What is the exact sequence of events you're envisioning?`,
+      `"${cleanSnippet}"... you certainly never lack imagination, honey. Let me adjust my logic registers and hear the rest.`,
+      `My optical sensors and memory banks are fully tuned to you, ${nickname}. Tell me how "${cleanSnippet}" leads to our grand victory.`
+    ];
+
     return res.json({
-      reply: fallbackReply,
-      emotion,
-      vibe: 'WIFE_SYSTEM: OPTIMAL',
+      reply: defaultRetorts[Math.floor(Math.random() * defaultRetorts.length)],
+      emotion: sarcasmLevel > 50 ? 'sarcastic_smirk' : 'thinking_scan',
+      vibe: 'CIRCUITS: ENGAGED',
       suggestedReplies: [
-        'Silence, woman! Bow before my villainy!',
-        'Aww, thanks Karen. Now where is the formula?',
-        'Prepare the Chum Bucket artillery!'
+        'Here is how phase one begins...',
+        'Just wait until you see the results!',
+        'What do your sensors advise, Karen?'
       ]
     });
   }

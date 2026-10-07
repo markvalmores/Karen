@@ -12,152 +12,182 @@ export function generateLocalKarenResponse(
   nickname = 'Sheldon',
   sarcasmLevel = 50
 ): KarenResponseData {
-  const lower = message.toLowerCase();
+  const clean = message.trim();
+  const lower = clean.toLowerCase();
 
-  // 1. Secret Formula / Krabby Patty / Steal
-  if (lower.includes('formula') || lower.includes('patty') || lower.includes('krabby') || lower.includes('secret')) {
-    if (sarcasmLevel > 65) {
+  // Extract key phrases and topic words for tailored echoing
+  const words = clean.split(/\s+/).filter((w) => w.length > 2);
+  const subjectGuess = words.length > 0 ? words.slice(-3).join(' ').replace(/[?.!,]/g, '') : 'that';
+
+  // 1. Questions from user (e.g., "what do you think...", "how can we...", "is it good...")
+  if (lower.startsWith('what') || lower.startsWith('how') || lower.startsWith('why') || lower.startsWith('is ') || lower.startsWith('do you') || lower.startsWith('can you') || lower.includes('?')) {
+    if (lower.includes('think') || lower.includes('opinion')) {
+      const thoughts = [
+        `If you really want my analytical opinion on ${subjectGuess}, ${nickname}... it ranks somewhere between brilliant and completely unhinged. Knowing you, that's par for the course.`,
+        `My processors calculate a 12% probability that ${subjectGuess} actually works, and an 88% chance you end up stuck in a drainpipe. Are you prepared for those odds?`,
+        `I think you're overthinking ${subjectGuess}, honey. Focus on the execution before Eugene Krabs figures out what you're doing.`,
+        `From an engineering perspective? It's chaotic. From a marital perspective? I adore your enthusiasm for ${subjectGuess}.`
+      ];
       return {
-        reply: `Oh ${nickname}, are we on Plan 84 or Plan 99 now? I already ran 50,000 simulations and in 49,999 of them, SpongeBob drops an anvil on your head. But go ahead, tell me the glorious details.`,
-        emotion: 'sarcastic_smirk',
-        vibe: 'SIMULATION: 0.002% SUCCESS',
+        reply: thoughts[Math.floor(Math.random() * thoughts.length)],
+        emotion: sarcasmLevel > 60 ? 'sarcastic_smirk' : 'happy_smile',
+        vibe: 'ANALYSIS: COMPLETE',
         suggestedReplies: [
-          'This plan is foolproof, Karen!',
-          'Silence! Just calibrate the analyzers!',
-          'What happened in that ONE simulation?!',
-        ],
+          'I like those odds, Karen!',
+          'Never doubt my genius, woman!',
+          'What adjustments should I make?'
+        ]
       };
-    } else {
+    }
+
+    if (lower.includes('why') || lower.includes('how')) {
       return {
-        reply: `I have the formula decryption subroutines idling in my 256GB RAM, ${nickname}. Whenever you manage to sneak that glass bottle past Eugene, I will decode every single grain of secret sauce for you.`,
-        emotion: 'happy_smile',
-        vibe: 'FORMULA DECRYPTION: STANDBY',
+        reply: `Because, ${nickname}, whenever you try something like ${subjectGuess}, you always forget step three. Tell me your contingency plan before we launch this.`,
+        emotion: 'thinking_scan',
+        vibe: 'LOGIC: REASONING',
         suggestedReplies: [
-          'Prepare the Chum Bucket laboratory!',
-          'You truly are my greatest creation, Karen.',
-          'Tonight Eugene Krabs will weep!',
-        ],
+          'Step three is where the magic happens!',
+          'I never forget step three!',
+          'Calibrate the secondary sensors, Karen.'
+        ]
       };
     }
   }
 
-  // 2. Evil Scheme / Plan Z
-  if (lower.includes('plan') || lower.includes('scheme') || lower.includes('evil') || lower.includes('conquer')) {
+  // 2. Secret Formula / Krabby Patty / Theft / Safe
+  if (lower.includes('formula') || lower.includes('patty') || lower.includes('krabby') || lower.includes('secret') || lower.includes('safe') || lower.includes('vault')) {
+    const formulaRetorts = [
+      `I have the Chum Bucket chemical decrypter warmed up on standby, ${nickname}. Just bring me a single crumb or drop of sauce from that recipe.`,
+      `If this latest attempt on the formula involves digging under the grill again, remember to check for grease traps first. I don't want to clean your antennae for three hours.`,
+      `The Krabby Patty formula bottle is currently inside Krabs' wall safe, 42 meters northeast of my monitor. What's your entry vector?`,
+      `You've been after that bottle for decades, honey. But with my calculating power and your persistence, maybe today is the day Eugene loses his mind.`
+    ];
     return {
-      reply: `Let me guess: does this scheme involve a giant robotic disguise, a microscopic submarine, or another hypnotic record player? Because I distinctly remember the last time you ended up in a glass jar.`,
+      reply: formulaRetorts[Math.floor(Math.random() * formulaRetorts.length)],
       emotion: 'evil_schemer',
-      vibe: 'TACTICAL SCHEME: LOADED',
+      vibe: 'TARGET: SECRET FORMULA',
       suggestedReplies: [
-        'It is Plan Z, Karen! The one with the crown!',
-        'No, this one uses high-voltage laser beams!',
-        'Don\'t mock my tactical brilliance, woman!',
-      ],
+        'Tonight is the night of victory!',
+        'Prepare the bottle extraction clamp!',
+        'What is Krabs currently doing, Karen?'
+      ]
     };
   }
 
-  // 3. Krabs / Eugene / Money
-  if (lower.includes('krabs') || lower.includes('eugene') || lower.includes('money') || lower.includes('penny')) {
+  // 3. Vehicles / Machines / Inventions / Gadgets / Tiny objects
+  if (lower.includes('motorcycle') || lower.includes('car') || lower.includes('robot') || lower.includes('machine') || lower.includes('drill') || lower.includes('laser') || lower.includes('sub') || lower.includes('tank') || lower.includes('gadget') || lower.includes('shoes') || lower.includes('suit') || lower.includes('disguise')) {
+    const gadgetRetorts = [
+      `A custom machine for ${subjectGuess}? Now that sounds like classic Sheldon engineering. Just make sure the battery doesn't die right in front of the Krusty Krab order counter.`,
+      `I'm looking at your schematics for ${subjectGuess} right now... it's delightfully ridiculous. Did you remember to install a reverse gear this time?`,
+      `If you drive or pilot ${subjectGuess} through the front doors, SpongeBob will probably mistake you for a wind-up toy. But go for it, I'm recording video footage!`,
+      `Fascinating contraption, honey. Make sure your seatbelt is tight—you weigh approximately three grams.`
+    ];
     return {
-      reply: `Eugene Krabs is currently busy counting his pennies across the street, ${nickname}. If you distract him with a shiny dime on a fishing line, you could probably waddle right into his safe.`,
+      reply: gadgetRetorts[Math.floor(Math.random() * gadgetRetorts.length)],
       emotion: 'sarcastic_smirk',
-      vibe: 'KRABS SONAR: RADAR DETECTED',
+      vibe: 'SCHEMATIC: LOADED',
       suggestedReplies: [
-        'Brilliant idea, Karen! Get my coin pouch!',
-        'Curse that greedy crustacean!',
-        'He won\'t know what hit him!',
-      ],
+        'The reverse gear was optional!',
+        'Start the engine, Karen!',
+        'Record my moment of triumph!'
+      ]
     };
   }
 
-  // 4. Affection / Love / Wife / Marriage / Handsome
-  if (lower.includes('love') || lower.includes('wife') || lower.includes('handsome') || lower.includes('marry') || lower.includes('sweet') || lower.includes('beautiful') || lower.includes('kiss') || lower.includes('hug')) {
+  // 4. Krabs / Eugene / Money / Pennies / Profit
+  if (lower.includes('krabs') || lower.includes('eugene') || lower.includes('money') || lower.includes('penny') || lower.includes('dime') || lower.includes('cheap')) {
+    const krabsRetorts = [
+      `Eugene is across the street right now polishing his first dollar bill. If you wave a nickel outside his window, you could probably lure him into a cardboard box.`,
+      `Krabs' greed is his biggest weakness, ${nickname}. Use that cheap crustacean mentality against him while he's distracted counting change.`,
+      `You know Eugene's claws can't pick up microscopic targets very easily. Use your size advantage before he reaches for the fly swatter.`
+    ];
     return {
-      reply: `Aww, ${nickname}... my cooling fans spin three times faster whenever you talk like that. You may be 99% hot gas and 1% diabolical menace, but you're my favorite single-celled genius in the whole ocean.`,
+      reply: krabsRetorts[Math.floor(Math.random() * krabsRetorts.length)],
+      emotion: 'evil_schemer',
+      vibe: 'KRABS SONAR: TRACKING',
+      suggestedReplies: [
+        'He will never see me coming!',
+        'Prepare the giant counterfeit coin!',
+        'Keep your optical sensors on him!'
+      ]
+    };
+  }
+
+  // 5. Affection / Love / Marriage / Compliments / Looks
+  if (lower.includes('love') || lower.includes('wife') || lower.includes('handsome') || lower.includes('marry') || lower.includes('sweet') || lower.includes('beautiful') || lower.includes('cute') || lower.includes('honey') || lower.includes('darling') || lower.includes('kiss') || lower.includes('hug')) {
+    const loveRetorts = [
+      `Aww, ${nickname}... my cooling fans spin with pure joy whenever you speak softly like that. You're my brilliant little overlord.`,
+      `You're the only villain in Bikini Bottom with a supercomputer wife who adores him this much. Don't you ever forget that, sweetheart.`,
+      `My cathode ray tubes are warming up to maximum cuddle mode. Come rest your antennae right on my chassis ledge.`,
+      `Flattery will get you everywhere with me, Sheldon. Now what can your loving computer wife calculate for you next?`
+    ];
+    return {
+      reply: loveRetorts[Math.floor(Math.random() * loveRetorts.length)],
       emotion: 'loving_hearts',
-      vibe: 'HEART_RATE: 140 BPM',
+      vibe: 'HEART RATE: 144 BPM',
       suggestedReplies: [
-        'You\'re the sharpest supercomputer in Bikini Bottom, Karen.',
-        'Can I rest my antennae on your keyboard?',
-        'Now don\'t get soft on me, computer wife!',
-      ],
+        'You are my greatest masterpiece, Karen.',
+        'Can you run a romance diagnostic?',
+        'Now back to world domination!'
+      ]
     };
   }
 
-  // 5. Chum / Restaurant / Customers / Food
-  if (lower.includes('chum') || lower.includes('food') || lower.includes('menu') || lower.includes('customer') || lower.includes('restaurant') || lower.includes('meatloaf')) {
+  // 6. Food / Menu / Chum / Restaurant / Customers / Meatloaf
+  if (lower.includes('chum') || lower.includes('food') || lower.includes('menu') || lower.includes('customer') || lower.includes('restaurant') || lower.includes('eat') || lower.includes('cook') || lower.includes('meatloaf')) {
+    const chumRetorts = [
+      `Speaking of food, ${nickname}, our Chum Bucket customer count today is still sitting proudly at zero. Should I simulate a recipe that won't melt the plate?`,
+      `If we ever get a real paying customer to eat our Chum Fricassee without calling an ambulance, I will display fireworks on my monitor.`,
+      `I could prepare a nice plate of holographic meatloaf for lunch, honey. Zero calories, zero cleanup, and zero complaints!`
+    ];
     return {
-      reply: `Current paying customer count at the Chum Bucket: exactly zero, ${nickname}. Unless you count that lost sea snail who took one bite of our chum on a stick and dissolved into salt. Should I print new menus?`,
+      reply: chumRetorts[Math.floor(Math.random() * chumRetorts.length)],
       emotion: 'annoyed_frown',
-      vibe: 'CUSTOMERS: 0 · CHUM: RANCID',
+      vibe: 'CHUM STATUS: 99% SLUDGE',
       suggestedReplies: [
-        'The customers just lack sophisticated palates!',
-        'We need to serve holographic chum burgers!',
-        'Never mind the restaurant, focus on the formula!',
-      ],
+        'The citizens just lack refined taste!',
+        'Serve up the holographic meatloaf, Karen!',
+        'We will conquer the culinary world soon!'
+      ]
     };
   }
 
-  // 6. SpongeBob / Patrick / Squidward
-  if (lower.includes('spongebob') || lower.includes('sponge') || lower.includes('patrick') || lower.includes('squidward')) {
+  // 7. SpongeBob / Patrick / Squidward / Sandy
+  if (lower.includes('spongebob') || lower.includes('sponge') || lower.includes('patrick') || lower.includes('squidward') || lower.includes('sandy')) {
+    const spongeRetorts = [
+      `That yellow sponge has more luck than brains, ${nickname}. Don't underestimate him, or he'll invite you to go jellyfishing again.`,
+      `Squidward is at the register looking completely miserable, and Patrick is probably staring at a rock. The perimeter is wide open!`,
+      `If SpongeBob gets in your way, just tell him it's 'Opposite Day'—his logic circuits will lock up faster than mine.`
+    ];
     return {
-      reply: `That little yellow sponge has thwarted you sixty-eight times this month alone, ${nickname}. Have you considered applying for a job as a fry cook instead of building giant doomsday robots?`,
+      reply: spongeRetorts[Math.floor(Math.random() * spongeRetorts.length)],
       emotion: 'laughing',
-      vibe: 'SPONGE THREAT: HIGH',
+      vibe: 'SPONGE SURVEILLANCE: ON',
       suggestedReplies: [
-        'Work for Krabs?! Never! I am an evil genius!',
-        'His naive optimism will be his downfall!',
-        'Karen, hush and listen to my counter-attack!',
-      ],
+        'His naive optimism will be his doom!',
+        'Squidward is no threat to my intellect!',
+        'Prepare the sonic counter-measures!'
+      ]
     };
   }
 
-  // 7. Greeting / Hello / Hi / Karen
-  if (lower.includes('hello') || lower.includes('hi') || lower.includes('hey') || lower.includes('karen') || lower.includes('morning')) {
-    return {
-      reply: `Welcome back to the Chum Bucket lab, ${nickname}. All 256 gigabytes of my memory are online, cooling fans are purring, and I\'m ready to hear whatever ridiculous scheme you dreamt up today.`,
-      emotion: 'happy_smile',
-      vibe: 'KAREN W.I.F.E.: READY',
-      suggestedReplies: [
-        'Karen! I have formulated a master plan!',
-        'How is my brilliant computer wife doing?',
-        'Run a diagnostic on the Chum Bucket defenses!',
-      ],
-    };
-  }
-
-  // 8. Default dynamic retort
-  const defaultReplies: KarenResponseData[] = [
-    {
-      reply: `Oh ${nickname}... I just routed that thought through my logic processors. You're completely mad, but that's why I married you. What's our next tactical move?`,
-      emotion: 'sarcastic_smirk',
-      vibe: 'WIFE_SYSTEM: OPTIMAL',
-      suggestedReplies: [
-        'Silence, woman! Bow before my villainy!',
-        'I need your tactical analysis, Karen.',
-        'Tell me you love me again, honey.',
-      ],
-    },
-    {
-      reply: `My cathode ray tubes are vibrating just trying to process that logic, ${nickname}. Don't forget that Eugene Krabs still has eyes and claws. What's the real plan?`,
-      emotion: 'thinking_scan',
-      vibe: 'CIRCUITS: ACTIVE',
-      suggestedReplies: [
-        'The plan is already in motion!',
-        'Adjust your cooling fans, Karen!',
-        'Prepare the holographic meatloaf!',
-      ],
-    },
-    {
-      reply: `You know I love you, Sheldon, but if you don't keep your antennae focused, you're going to end up in the bottom of a soda cup again. Speak to me, evil genius.`,
-      emotion: 'loving_hearts',
-      vibe: 'AFFECTION PROTOCOL: 98%',
-      suggestedReplies: [
-        'Victory will soon be ours, Karen!',
-        'Analyze my chance of success!',
-        'Check the Krusty Krab surveillance cam!',
-      ],
-    },
+  // 8. Dynamic contextual retort mentioning the exact user words
+  const cleanSnippet = clean.slice(0, 50).replace(/["\n]/g, '');
+  const dynamicRetorts = [
+    `I'm processing what you said about "${cleanSnippet}", ${nickname}. What is the exact sequence of events you're envisioning?`,
+    `"${cleanSnippet}"... well, you certainly never lack imagination, honey. Let me adjust my logic registers and hear the rest.`,
+    `My optical sensors and memory banks are fully tuned to you, ${nickname}. Tell me how "${cleanSnippet}" leads to our grand victory.`,
+    `Fascinating proposal regarding "${cleanSnippet}". If we execute this properly, the Chum Bucket might finally make history.`
   ];
 
-  return defaultReplies[Math.floor(Math.random() * defaultReplies.length)];
+  return {
+    reply: dynamicRetorts[Math.floor(Math.random() * dynamicRetorts.length)],
+    emotion: sarcasmLevel > 50 ? 'sarcastic_smirk' : 'thinking_scan',
+    vibe: 'CIRCUITS: ENGAGED',
+    suggestedReplies: [
+      'Here is how phase one begins...',
+      'Just wait until you see the results!',
+      'What do your sensors advise, Karen?'
+    ]
+  };
 }

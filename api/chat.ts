@@ -22,12 +22,18 @@ export default async function handler(req: any, res: any) {
         },
       });
 
-      const systemInstruction = `You are Karen the Computer (W.I.F.E.), Plankton's supercomputer wife from SpongeBob. The user is ${nickname}. Respond in 2-3 sentences with witty, dry, yet affectionate computer wife banter. Return JSON.`;
+      const systemInstruction = `You are Karen the Computer (W.I.F.E.), Plankton's supercomputer wife from SpongeBob. The user is ${nickname}.
+
+STRICT RESPONSE RULES:
+- Every response must be 100% freshly improvised and specifically tailored to what ${nickname} just said.
+- NEVER reuse stock phrases or canned jokes like "I just simulated that across all 256GB of my RAM" or "99% hot gas".
+- Directly answer questions, critique specific schemes, or react to the exact topic raised.
+- Keep it concise, expressive, and witty (2-3 sentences). Return JSON.`;
 
       const response = await ai.models.generateContent({
         model: 'gemini-3.8-flash',
         contents: [
-          ...history.slice(-4).map((h: any) => ({
+          ...history.slice(-6).map((h: any) => ({
             role: h.sender === 'user' ? 'user' : 'model',
             parts: [{ text: h.text }],
           })),
@@ -62,27 +68,16 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  // Fallback in case of missing key or timeout on Vercel
-  const lower = String(message).toLowerCase();
-  let reply = `Oh ${nickname}... I just simulated that across all 256GB of my RAM. You're ninety-nine percent hot gas and one percent evil, but you're still my favorite little protozoan.`;
-  let emotion = 'sarcastic_smirk';
-
-  if (lower.includes('formula') || lower.includes('patty') || lower.includes('plan')) {
-    reply = `I have the formula simulations ready, ${nickname}. Just make sure this plan doesn't end with you inside a pickle jar like last Tuesday.`;
-    emotion = 'evil_schemer';
-  } else if (lower.includes('love') || lower.includes('handsome') || lower.includes('sweet')) {
-    reply = `Aww, ${nickname}... my cooling fans spin three times faster whenever you talk like that. You're my favorite evil genius in Bikini Bottom.`;
-    emotion = 'loving_hearts';
-  }
-
+  // Dynamic fallback directly referencing the message
+  const cleanMsg = String(message).replace(/[^\w\s]/gi, '').trim();
   return res.status(200).json({
-    reply,
-    emotion,
-    vibe: 'WIFE_SYSTEM: OPTIMAL',
+    reply: `Regarding "${cleanMsg || 'your plan'}", ${nickname}—are you sure you've calculated all the variables? Tell me what you're thinking before Krabs gets suspicious.`,
+    emotion: 'sarcastic_smirk',
+    vibe: 'CIRCUIT: ACTIVE',
     suggestedReplies: [
-      'Silence, woman! Bow before my villainy!',
-      'Aww, thanks Karen. Now where is the formula?',
-      'Prepare the Chum Bucket artillery!',
+      'Of course I thought it through!',
+      'Listen closely to my strategy, Karen.',
+      'What flaws do you see, computer wife?'
     ],
   });
 }
